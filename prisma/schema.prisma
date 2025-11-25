@@ -1,0 +1,134 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+
+model clients {
+  id           BigInt    @id @default(autoincrement())
+  full_name    String    @db.VarChar(255)
+  phone_number String    @unique @db.VarChar(50)
+  address      String?   @db.VarChar(500)
+  location     String?   @db.VarChar(255)
+  email        String?   @unique @db.VarChar(255)
+  password     String?   @db.VarChar(255)
+  token        String?   @db.VarChar(500)
+  otp_code     String?   @db.VarChar(6)
+  otp_expires  DateTime?
+  telegram_id  String?   @unique @db.VarChar(100)
+  is_active    Boolean   @default(false)
+  orders       orders[]
+
+  @@map("clients")
+}
+
+model admins {
+  id           BigInt         @id @default(autoincrement())
+  full_name    String         @db.VarChar(255)
+  user_name    String         @unique @db.VarChar(100)
+  password     String         @db.VarChar(255)
+  phone_number String         @db.VarChar(50)
+  email        String         @unique @db.VarChar(255)
+  tg_link      String?        @db.VarChar(255)
+  token        String?        @db.VarChar(500)
+  is_creator   Boolean        @default(false)
+  is_active    Boolean        @default(true)
+  description  String?        @db.Text
+  role         AdminRole      @default(COOK)
+  permissions  Json?
+  otp_code     String?        @db.VarChar(10)
+  otp_expires  DateTime?
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+  operations   operations[]
+
+  @@map("admins")
+}
+
+enum AdminRole {
+  MANAGER
+  ADMIN
+  COOK
+}
+
+model currency_types {
+  id          BigInt   @id @default(autoincrement())
+  name        String   @db.VarChar(100)
+  description String?  @db.Text
+  orders      orders[]
+
+  @@map("currency_types")
+}
+
+model statuses {
+  id          BigInt       @id @default(autoincrement())
+  name        String       @db.VarChar(100)
+  description String?      @db.Text
+  operations  operations[]
+
+  @@map("statuses")
+}
+
+model products {
+  id           BigInt        @id @default(autoincrement())
+  name         String        @db.VarChar(255)
+  description  String?       @db.Text
+  price        Decimal       @db.Decimal(15, 2)
+  is_available Boolean       @default(true)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  orderItems   order_items[]
+
+  @@map("products")
+}
+
+model orders {
+  id               String        @id @default(uuid()) @db.Uuid
+  order_unique_id  String        @unique @default(uuid()) @db.Uuid
+  client_id        BigInt
+  product_link     String?       @db.VarChar(500)
+  quantity         BigInt?
+  summa            Decimal       @db.Decimal(15, 2)
+  currency_type_id BigInt
+  truck            String?       @db.VarChar(255)
+  description      String?       @db.Text
+  is_cancelled     Boolean       @default(false)
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+  client           clients         @relation(fields: [client_id], references: [id])
+  currency_type    currency_types  @relation(fields: [currency_type_id], references: [id])
+  operations       operations[]
+  orderItems       order_items[]
+
+  @@map("orders")
+}
+
+model order_items {
+  id         BigInt   @id @default(autoincrement())
+  order_id   String   @db.Uuid
+  product_id BigInt
+  quantity   Int
+  price      Decimal  @db.Decimal(15, 2)
+  order      orders   @relation(fields: [order_id], references: [id], onDelete: Cascade)
+  product    products @relation(fields: [product_id], references: [id])
+
+  @@map("order_items")
+}
+
+model operations {
+  id             BigInt   @id @default(autoincrement())
+  order_id       String   @db.Uuid
+  status_id      BigInt
+  operation_date DateTime @default(now())
+  admin_id       BigInt
+  description    String?  @db.Text
+  order          orders   @relation(fields: [order_id], references: [id])
+  status         statuses @relation(fields: [status_id], references: [id])
+  admin          admins   @relation(fields: [admin_id], references: [id])
+
+  @@map("operations")
+}
