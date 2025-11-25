@@ -19,7 +19,7 @@ const config = {
     password: process.env.EMAIL_PASSWORD,
   },
   telegram: {
-    botToken: process.env.TELEGRAM_BOT_TOKEN || '8525401678:AAEtmtU0cUM1q6i8PJrdpuEZPplNP7D0mWc',
+    botToken: process.env.TELEGRAM_BOT_TOKEN ,
   },
   nodeEnv: process.env.NODE_ENV || 'development',
 };
